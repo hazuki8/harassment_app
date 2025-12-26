@@ -350,7 +350,7 @@ axis_map = {
     'employment_status': '雇用形態', 'industry': '業界', 'job_type': '職種', 'service_years': '勤続年数'
 }
 
-# デモデータを読み込んで全属性値を取得
+# デモデータ（実シナリオ活用）
 demo_df = generate_demo_data()
 
 # 条件設定エリア
