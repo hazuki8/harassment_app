@@ -1,20 +1,32 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from supabase import create_client, Client
 
 # キャッシュ設定
 @st.cache_resource
 def init_connection():
+    """Supabaseクライアントを初期化します。
+    supabaseクライアントのインポートを関数内に移動し、
+    ランタイム環境でパッケージ未インストール時のImportErrorを回避します。
+    """
     try:
+        # ランタイムでのみ読み込むことで、モジュールインポート時の失敗を防ぐ
+        from supabase import create_client  # noqa: WPS433 (runtime import)
+
         url = st.secrets["supabase"]["url"]
         key = st.secrets["supabase"]["key"]
         return create_client(url, key)
+    except ImportError:
+        st.error("Supabaseクライアントが見つかりません。requirements.txt に supabase を追加し、再デプロイしてください。")
+        return None
+    except KeyError:
+        st.error("Supabaseの接続情報が設定されていません。st.secrets に supabase.url と supabase.key を追加してください。")
+        return None
     except Exception as e:
         st.error(f"Supabase接続エラー: {e}")
         return None
 
-supabase: Client = init_connection()
+supabase = init_connection()
 
 # -------------------------------------------------------
 # ユーザー登録
@@ -276,6 +288,9 @@ def save_feedback(user_id, q1_a, q1_b, q1_c, q2_a, q2_b, q3_a, q3_b, q4, q5, q6,
         "q12": q12
     }
     try:
+        if supabase is None:
+            st.error("データベース接続が未設定です。Supabaseクライアントの初期化とsecretsの設定を確認してください。")
+            return False
         supabase.table("user_feedback").insert(data).execute()
         return True
     except Exception as e:
@@ -287,6 +302,8 @@ def check_feedback_status(user_id):
     ユーザーがすでにフィードバック回答済みか確認
     """
     try:
+        if supabase is None:
+            return False
         response = supabase.table("user_feedback").select("feedback_id").eq("user_id", user_id).execute()
         return len(response.data) > 0
     except:
