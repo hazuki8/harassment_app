@@ -76,5 +76,5 @@ if st.button(
             st.experimental_set_query_params(consent="1")
         st.switch_page("pages/1_📝_パワハラ認識傾向チェック.py")
 
-st.caption("⏱️ 所要時間：約 15分 ／ 📝 登録不要・匿名で利用可能")
+st.caption("⏱️ 所要時間：約 15分（診断5分、結果・アンケート10分） ／ 📝 登録不要・匿名で利用可能")
 
