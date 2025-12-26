@@ -812,3 +812,22 @@ if not df_display.empty:
         )
 else:
     st.info(empty_msg)
+
+# ==========================================
+# 5. 次のアクション (ページ遷移ボタン)
+# ==========================================
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; margin-bottom: 20px;">
+    <h4 style="margin-bottom: 10px;">📊 さらに詳しく分析する</h4>
+    <p style="color: #666;">
+        「世の中の認識」と比較して、あなたのギャップがどのカテゴリに集中しているか、<br>
+        属性別（年代・役職など）にどのような違いがあるかを確認できます。
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+col_next_l, col_next_c, col_next_r = st.columns([1, 2, 1])
+with col_next_c:
+    if st.button("🌍 世の中の認識傾向を見る", type="primary", use_container_width=True):
+        st.switch_page("pages/3_🌍_世の中の認識傾向.py")
