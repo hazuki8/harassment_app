@@ -724,7 +724,7 @@ def render_detail_card(row, tag_text, tag_color, bg_color, show_severity=False):
         <div style="margin-top:10px; background-color:{bg_color}; padding:15px; border-radius:8px; border:1px solid {tag_color}30;">
             <div style="font-weight:bold; font-size:1.0em; color:#444;">💡 解説</div>
             <div style="font-size:0.95em; margin-bottom:12px; line-height:1.5;">{explanation}</div>
-            <div style="font-weight:bold; font-size:1.0em; color:#444;">🚀 改善アクション</div>
+            <div style="font-weight:bold; font-size:1.0em; color:#444;">📣 アドバイス</div>
             <div style="font-size:0.95em; font-weight:bold; color:{tag_color}; line-height:1.5;">{advice}</div>
         """, unsafe_allow_html=True)
         
