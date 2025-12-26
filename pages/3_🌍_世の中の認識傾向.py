@@ -54,7 +54,8 @@ def load_data():
     view_data = get_global_analysis_data_view()
     
     if not view_data:
-        st.warning("⚠️ データベースからのデータ取得に失敗しました。デモデータを使用します。")
+        st.info("📊 現在のデータ数: 0人（まだ回答データがありません）")
+        st.info("💻 研究・実験用のデモデータを使用します。")
         return generate_demo_data(), True
     
     df_full = pd.DataFrame(view_data)
