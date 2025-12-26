@@ -6,6 +6,10 @@ import numpy as np
 import textwrap
 from utils.db import get_user_responses, get_global_averages_stats, generate_demo_data
 
+# 初回訪問フラグ
+if "visited_page2" not in st.session_state:
+    st.session_state.visited_page2 = True
+
 # ページ設定
 st.set_page_config(page_title="あなたの認識傾向", layout="wide")
 

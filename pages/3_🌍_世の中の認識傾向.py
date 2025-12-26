@@ -6,6 +6,10 @@ import numpy as np
 import textwrap
 from utils.db import get_global_analysis_data_view, generate_demo_data
 
+# 初回訪問フラグ
+if "visited_page3" not in st.session_state:
+    st.session_state.visited_page3 = True
+
 st.set_page_config(page_title="世の中の傾向", page_icon="🌏", layout="wide")
 
 # カスタムCSS
