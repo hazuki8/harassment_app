@@ -1,5 +1,4 @@
 import streamlit as st
-from utils.db import get_all_scenarios
 
 # ページ設定
 st.set_page_config(
