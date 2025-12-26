@@ -249,25 +249,31 @@ def generate_demo_data():
 
 # ==========================================
 # ユーザーテスト（フィードバック）関連
-# utils/db.py の末尾に追加
 # ==========================================
 
-def save_feedback(user_id, q_anxiety_pre, q_anxiety_post, q_self_awareness, q_clarity, q_confusion, helpful_features, free_comment):
+def save_feedback(user_id, q1_a, q1_b, q1_c, q2_a, q2_b, q3_a, q3_b, q4, q5, q6, q7, q8, q9, q10, q11, q12):
     """
     ユーザーテストの回答を保存する
+    質問番号と変数名を完全に一致させた新バージョン
     """
-    # リストで渡される機能一覧を文字列に変換（例: "法的基準,散布図"）
-    features_str = ",".join(helpful_features) if helpful_features else ""
-    
     data = {
         "user_id": user_id,
-        "q_anxiety_pre": q_anxiety_pre,
-        "q_anxiety_post": q_anxiety_post,
-        "q_self_awareness": q_self_awareness,
-        "q_clarity": q_clarity,
-        "q_confusion": q_confusion,
-        "helpful_features": features_str,
-        "free_comment": free_comment
+        "q1_a": q1_a,
+        "q1_b": q1_b,
+        "q1_c": q1_c,
+        "q2_a": q2_a,
+        "q2_b": q2_b,
+        "q3_a": q3_a,
+        "q3_b": q3_b,
+        "q4": q4,
+        "q5": q5,
+        "q6": q6,
+        "q7": q7,
+        "q8": q8,
+        "q9": q9,
+        "q10": q10,
+        "q11": q11,
+        "q12": q12
     }
     try:
         supabase.table("user_feedback").insert(data).execute()

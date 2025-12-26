@@ -2,193 +2,257 @@ import streamlit as st
 from utils.db import save_feedback, check_feedback_status
 
 # ページ設定
-st.set_page_config(page_title="ユーザーテスト", page_icon="🗣️", layout="centered")
+st.set_page_config(page_title="ユーザーアンケート", page_icon="📋", layout="centered")
 
-st.title("🗣️ 利用後アンケート")
+st.title("📋 ユーザーアンケート")
 st.markdown("""
 本システムの有効性を検証するための**研究用アンケート**（ユーザーテスト）です。  
-診断結果を見た率直な感想をお聞かせください。
+いただいた回答は研究データとして統計的に処理されます。システムを使った率直なご感想をお聞かせください。
 """)
 st.divider()
 
 # -------------------------------------------
-# 1. ログイン & 回答済みチェック
+# 1. ログイン & 閲覧チェック（制御ロジック）
 # -------------------------------------------
+# ログインチェック
 if "user_id" not in st.session_state or not st.session_state.user_id:
     st.warning("⚠️ 先に「パワハラ認識傾向チェック」を実施してください。")
     if st.button("診断ページへ移動"):
         st.switch_page("pages/1_📝_パワハラ認識傾向チェック.py")
     st.stop()
 
-# -------------------------------------------
-# 2. 閲覧チェック（Page2 と Page3 が必須）
-# -------------------------------------------
+# ページ閲覧チェック（結果を見ていない人をブロック）
 has_seen_p2 = st.session_state.get("visited_page2", False)
 has_seen_p3 = st.session_state.get("visited_page3", False)
 
-# どちらか一方でも見ていなければブロック
 if not has_seen_p2 or not has_seen_p3:
-    st.warning("⚠️ アンケートに回答するには、診断結果（あなたの認識傾向 / 世の中の認識傾向）の両方を確認する必要があります。")
-    
+    st.warning("ℹ️ アンケートに回答するには、診断結果（あなたの認識傾向・世の中の認識傾向）の両方を確認していただく必要があります。")
     col1, col2 = st.columns(2)
-    
-    # Page 2 のチェック状況
     with col1:
         if not has_seen_p2:
-            st.error("「👤 あなたの認識傾向」が未確認です")
-            if st.button("ページ2へ移動", type="primary", key="go_p2"):
-                st.switch_page("pages/2_👤_あなたの認識傾向.py")
+            st.error("未確認: 👤 あなたの認識傾向")
+            if st.button("ページへ移動", type="primary", key="go_p2"): st.switch_page("pages/2_👤_あなたの認識傾向.py")
         else:
-            st.success("✅ 「👤 あなたの認識傾向」確認済み")
-            
-    # Page 3 のチェック状況
+            st.success("✅ 確認済: 👤 あなたの認識傾向")
     with col2:
         if not has_seen_p3:
-            st.error("「🌍 世の中の認識傾向」が未確認です")
-            if st.button("ページ3へ移動", type="primary", key="go_p3"):
-                st.switch_page("pages/3_🌍_世の中の認識傾向.py")
+            st.error("未確認: 🌍 世の中の認識傾向")
+            if st.button("ページへ移動", type="primary", key="go_p3"): st.switch_page("pages/3_🌍_世の中の認識傾向.py")
         else:
-            st.success("✅ 「🌍 世の中の認識傾向」確認済み")
-            
-    st.stop() # ここで処理を止める
+            st.success("✅ 確認済: 🌍 世の中の認識傾向")
+    st.stop()
 
-# -------------------------------------------
-# 3. 回答済みチェック
-# -------------------------------------------
+# 回答済みチェック
 if check_feedback_status(st.session_state.user_id):
     st.success("✅ アンケートへのご協力ありがとうございました！")
-    st.info("あなたの回答は正常に記録されています。ブラウザを閉じて終了してください。")
+    st.info("回答は送信されました。ブラウザを閉じて終了してください。")
     st.stop()
 
 # -------------------------------------------
-# 4. 選択肢の定義（分析しやすい数値入りラベル）
+# アンケートフォーム
 # -------------------------------------------
-# 5段階評価（基本）
-OPTS_5 = [
-    "1. 全くそう思わない",
-    "2. あまりそう思わない",
-    "3. どちらとも言えない",
-    "4. ややそう思う",
-    "5. 強くそう思う"
-]
 
-# 変化の度合い
-OPTS_CHANGE = [
-    "1. 全く変化しない（迷うまま）",
-    "2. あまり変化しない",
-    "3. どちらとも言えない",
-    "4. 少し解消されそうだ",
-    "5. 大きく解消されそうだ（迷わなくなる）"
-]
+# カスタムCSS（フォームの見た目を整える）
+st.markdown("""
+    <style>
+    /* ラジオボタンのラベルのフォントウェイト */
+    .stRadio label { font-weight: 500; }
+    
+    /* フォーム全体の枠線とパディング */
+    div[data-testid="stForm"] { 
+        border: 1px solid #e0e0e0; 
+        padding: 24px; 
+        border-radius: 12px;
+    }
+    
+    /* 質問番号のスタイル統一 */
+    .stMarkdown h4 {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# 理解度
-OPTS_UNDERSTAND = [
-    "1. 全く理解できなかった",
-    "2. あまり理解できなかった",
-    "3. どちらとも言えない",
-    "4. ある程度理解できた",
-    "5. よく理解できた"
-]
-
-# 整理感
-OPTS_CLARITY = [
-    "1. 全く整理できなかった",
-    "2. あまり整理できなかった",
-    "3. どちらとも言えない",
-    "4. ある程度整理がついた",
-    "5. 非常にスッキリした"
-]
-
-# -------------------------------------------
-# 5. アンケートフォーム
-# -------------------------------------------
 with st.form("feedback_form"):
-    st.markdown("### 1. 気持ちの変化について")
-    st.caption("このシステムを利用する「前」と「後」の気持ちを比較して教えてください。")
     
-    st.markdown("**Q1. 利用する【前】の不安**")
-    st.markdown("部下への指導や注意をする際、「パワハラになるかもしれない」と不安や迷いを感じていましたか？")
-    q_anxiety_pre = st.radio(
-        "Q1", OPTS_5, index=None, horizontal=True, label_visibility="collapsed"
-    )
-        
-    st.write("")
-    st.markdown("**Q2. 利用した【後】の変化**")
-    st.markdown("自分の判断基準や傾向が可視化されたことで、その不安や迷いはどう変化しそうですか？")
-    q_anxiety_post = st.radio(
-        "Q2", OPTS_CHANGE, index=None, horizontal=True, label_visibility="collapsed"
+    # --- Q1 ---
+    st.markdown("##### Q1-a. 他者の言動に対して意見を言う際、あるいは自分の言動を振り返る際、「どこまでなら許されるのか（ハラスメントにならないか）」の線引きに迷うことはありますか？")
+    q1_a = st.radio(
+        "Q1-a", 
+        ["1. 全くない", "2. あまりない", "3. 時々ある", "4. よくある", "5. 常に感じる"], 
+        index=None, label_visibility="collapsed"
     )
 
-    st.markdown("---")
-    st.markdown("### 2. システムの評価")
+    st.divider()
     
-    st.markdown("**Q3. 自己理解（内省）**")
-    st.markdown("自分が「どのような場面で厳しく（または甘く）判断しやすいか」という傾向を理解できましたか？")
-    q_self_awareness = st.radio(
-        "Q3", OPTS_UNDERSTAND, index=None, horizontal=True, label_visibility="collapsed"
+    st.markdown("##### Q1-b. 本システムで「法的基準との比較（認識不足・過剰の判定）」等の明確な基準を確認したことで、線引きに対する迷いは整理されましたか？")
+    q1_b = st.radio(
+        "Q1-b", 
+        ["1. 変化しない（迷うまま）", "2. あまり変化しない", "3. どちらとも言えない", "4. 少し整理/安心できた", "5. 非常に整理/安心できた"], 
+        index=None, label_visibility="collapsed"
     )
 
-    st.write("")
-    st.markdown("**Q4. 納得感・整理感**")
-    st.markdown("「白黒はっきりしないグレーな事例」や「世の中とのズレ」を見て、判断の整理がつきましたか？")
-    q_clarity = st.radio(
-        "Q4", OPTS_CLARITY, index=None, horizontal=True, label_visibility="collapsed"
-    )
-    
-    st.write("")
-    st.markdown("**Q5. 混乱（逆質問）**")
-    st.markdown("逆に、情報が多すぎて「余計にどう判断していいか分からなくなった」ということはありましたか？")
-    q_confusion = st.radio(
-        "Q5", ["いいえ、混乱はしていない", "はい、余計に混乱した"], index=None, horizontal=True, label_visibility="collapsed"
+    st.divider()
+
+    st.markdown("##### Q1-c. 各シナリオの「解説」や「アドバイス」を読むことで、なぜその判断になるのかの理由や具体的な対策について、十分に納得・理解できましたか？")
+    q1_c = st.radio(
+        "Q1-c", 
+        ["1. 全く理解できなかった", "2. あまり理解できなかった", "3. どちらとも言えない", "4. ある程度理解できた", "5. 非常に納得・理解できた"], 
+        index=None, label_visibility="collapsed"
     )
 
-    st.markdown("---")
-    st.markdown("### 3. 効果の要因")
+    st.divider()
+
+    # --- Q2 ---
+    st.markdown("##### Q2-a. 「自分の常識や感覚は、今の世の中や他の世代とズレているのではないか？」と不安に感じることはありますか？")
+    q2_a = st.radio(
+        "Q2-a", 
+        ["1. 全くない", "2. あまりない", "3. 時々ある", "4. よくある", "5. 常に感じる"], 
+        index=None, label_visibility="collapsed"
+    )
     
-    st.markdown("**Q6. 役立った機能（複数選択可）**")
-    st.markdown("あなたの「気づき」や「安心」に特に効果があったと思うものを全て選んでください。")
-    helpful_features = st.multiselect(
-        "Q6",
+    st.divider()
+    
+    st.markdown("##### Q2-b. 本システムで「世の中の認識との比較（過敏・鈍感などの判定）」や「属性間ギャップ分析」により自身の立ち位置が可視化されたことで、ズレに対する漠然とした不安は軽減されましたか？")
+    q2_b = st.radio(
+        "Q2-b", 
+        ["1. 変化しない（不安なまま）", "2. あまり変化しない", "3. どちらとも言えない", "4. 少し解消/安心できた", "5. 非常に解消/安心できた"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+
+    # --- Q3 ---
+    st.markdown("##### Q3-a. 「ハラスメントだと言われるのが怖い」「関係が悪化するのが怖い」という理由で、必要な発言やコミュニケーションをためらうことはありますか？")
+    q3_a = st.radio(
+        "Q3-a", 
+        ["1. 全くない", "2. あまりない", "3. 時々ある", "4. よくある", "5. 常に感じる"], 
+        index=None, label_visibility="collapsed"
+    )
+    
+    st.divider()
+    
+    st.markdown("##### Q3-b. 本システムで「パワハラ判断傾向マップ（2軸の散布図）」などにより「社会的な境界線（リスクやグレーゾーン）」が可視化されたことで、「自信を持って伝えても大丈夫だ」あるいは「ここは注意しよう」という「判断の自信」につながりそうですか？")
+    q3_b = st.radio(
+        "Q3-b", 
+        ["1. つながらない", "2. あまりつながらない", "3. どちらとも言えない", "4. ややつながる", "5. 非常につながる"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+
+    # --- Q4, 5, 6 ---
+    st.markdown("##### Q4. 本システムの「世間との認識ギャップ分布」や「平均との比較」を通して、ご自身の判断傾向（厳しさ・甘さの癖）に気づく助けになりましたか？")
+    q4 = st.radio(
+        "Q4", 
+        ["1. 全くそう思わない", "2. あまりそう思わない", "3. どちらとも言えない", "4. ややそう思う", "5. 強くそう思う"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+    
+    st.markdown("##### Q5. 本システムの「属性間ギャップ分析（年代・役職別などの比較）」などの可視化機能は、自分とは異なる感じ方をする人（相手）の視点を想像するきっかけになりましたか？")
+    q5 = st.radio(
+        "Q5", 
+        ["1. 全くそう思わない", "2. あまりそう思わない", "3. どちらとも言えない", "4. ややそう思う", "5. 強くそう思う"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+    
+    st.markdown("##### Q6. 本システムの診断結果を受けて、今後の「ご自身の言動」や、「他者とのコミュニケーションのあり方」を「見直そう・注意しよう」という意識は高まりましたか？")
+    q6 = st.radio(
+        "Q6", 
+        ["1. 全くそう思わない", "2. あまりそう思わない", "3. どちらとも言えない", "4. ややそう思う", "5. 強くそう思う"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+
+    # --- Q7, 8, 9 ---
+    st.markdown("##### Q7. 提示された診断結果（自分の傾向や、世の中とのズレ）は、ご自身の実感と照らし合わせて「納得できる・信頼できる」と感じましたか？")
+    q7 = st.radio(
+        "Q7", 
+        ["1. 全く納得できない", "2. あまり納得できない", "3. どちらとも言えない", "4. おおむね納得できる", "5. 非常に納得できる"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+    
+    st.markdown("##### Q8. 画面の操作や、グラフ・文字の見やすさはどうでしたか？")
+    q8 = st.radio(
+        "Q8", 
+        ["1. 非常に使いにくい", "2. やや使いにくい", "3. どちらとも言えない", "4. 問題なく使えた", "5. 非常に使いやすい"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+    
+    st.markdown("##### Q9. 自身の傾向（ズレやリスク）を指摘された際、不快感や「納得いかない」という反発を感じましたか？")
+    q9 = st.radio(
+        "Q9", 
+        ["1. 強い不快感・反発を感じた", "2. 少し複雑な気持ちになった", "3. どちらとも言えない", "4. 特に気にならなかった", "5. 素直に受け入れられた"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+    
+    st.markdown("##### Q10. ご自身の「判断の助け」や「気づき」に特につながったと感じる機能を教えてください（複数選択可）。")
+    q10 = st.multiselect(
+        "Q10",
         options=[
-            "法的基準との比較（赤・青の判定）",
-            "世の中の感覚とのズレ（散布図・マップ）",
-            "類型別の分析（6類型のグラフ）",
-            "シナリオごとの解説・弁護士基準",
-            "行動指針（Advice）",
-            "自分と似た属性（年代・役職など）との比較"
-        ],
+                "法的基準との比較（認識不足・過剰の判定）",
+                "世の中の認識との比較（過敏・鈍感などの判定）",
+                "パワハラ判断傾向マップ（社会的なグレーゾーンの把握）",
+                "属性間ギャップ分析（属性ごとの認識差の比較）",
+                "シナリオごとの解説・アドバイス（具体的な判断ポイントの学習）",
+                "類型別分析（パワハラ6類型ごとの傾向把握）",
+                "世間との認識ギャップ分布（世の中の分布における自分の位置）",
+                "全シナリオ詳細データ（シナリオごとの他者回答割合の確認）"
+                ],
         label_visibility="collapsed"
     )
 
-    st.write("")
-    st.markdown("**Q7. 自由記述（任意）**")
-    free_comment = st.text_area("気づいた点、感想、改善要望などをご自由にお書きください。", height=100)
+    st.divider()
     
-    # 送信ボタン
+    st.markdown("##### Q11. 周囲でパワハラの判断に迷っている同僚や知人がいた場合、このシステムを利用するよう勧めたいと思いますか？")
+    q11 = st.radio(
+        "Q11", 
+        ["1. 全くそう思わない", "2. あまりそう思わない", "3. どちらとも言えない", "4. ややそう思う", "5. 強くそう思う"], 
+        index=None, label_visibility="collapsed"
+    )
+
+    st.divider()
+    
+    st.markdown("##### Q12. ご意見・ご感想（任意）")
+    st.caption("使ってみた感想、改善点などがあればご自由にお書きください。")
+    q12 = st.text_area("", height=100, label_visibility="collapsed")
+    
+    st.markdown("")
     submitted = st.form_submit_button("回答を送信する", type="primary", use_container_width=True)
 
     if submitted:
-        # 必須項目のチェック
-        required_fields = [q_anxiety_pre, q_anxiety_post, q_self_awareness, q_clarity, q_confusion]
-        if not all(required_fields):
-            st.error("⚠️ 未回答の項目があります。Q1〜Q5は必須回答です。")
+        # Q12以外は必須
+        required = [q1_a, q1_b, q1_c, q2_a, q2_b, q3_a, q3_b, 
+                    q4, q5, q6, 
+                    q7, q8, q9, q11]
+        
+        if not all(required):
+            st.error("⚠️ 未回答の項目があります。Q1〜Q11は必須回答です。")
         else:
-            # 回答データの整形（文字列から数値を取り出す）
-            v_pre = int(q_anxiety_pre.split(".")[0])
-            v_post = int(q_anxiety_post.split(".")[0])
-            v_self = int(q_self_awareness.split(".")[0])
-            v_clarity = int(q_clarity.split(".")[0])
-            # 混乱フラグ（はい=5, いいえ=1）
-            v_conf = 5 if q_confusion == "はい、余計に混乱した" else 1
-            
-            # DB保存
+            def to_int(val):
+                return int(val.split(".")[0])
+
+            # DB保存 (save_feedbackの実装に合わせて呼び出し)
             if save_feedback(
                 st.session_state.user_id,
-                v_pre, v_post, v_self, v_clarity, v_conf,
-                helpful_features,
-                free_comment
+                to_int(q1_a), to_int(q1_b), to_int(q1_c),
+                to_int(q2_a), to_int(q2_b), 
+                to_int(q3_a), to_int(q3_b),
+                to_int(q4), to_int(q5), to_int(q6), 
+                to_int(q7), to_int(q8), to_int(q9),
+                q10, to_int(q11), q12
             ):
                 st.balloons()
                 st.success("送信完了しました。ご協力ありがとうございました！")
-                # 完了状態を反映するためにリロード
                 st.rerun()
