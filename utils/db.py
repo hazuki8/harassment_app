@@ -191,13 +191,15 @@ def get_global_averages():
 # -------------------------------------------------------
 def generate_demo_data():
     """
-    研究・実験用のデモデータを生成
-    統計的に妥当な分布を持つシミュレーションデータ
-    
-    Returns:
-        pd.DataFrame: デモデータ（25人×30問=750レコード）
+    実際のシナリオメタデータ（title/text/category/type など）を使用しつつ、
+    回答のみをシミュレーション生成するデモデータ（25人×シナリオ数）。
     """
-    # 属性の選択肢
+    scenarios = get_all_scenarios() or []
+    if not scenarios:
+        # シナリオが取得できない場合は空データを返す
+        st.info("シナリオデータが未登録のため、デモ生成をスキップします。")
+        return pd.DataFrame()
+
     ages = ["20代", "30代", "40代", "50代"]
     genders = ["男性", "女性"]
     positions = ["一般社員", "主任・係長クラス (現場リーダー)", "課長クラス (マネジメント層)", "部長クラス (上級管理職)"]
@@ -205,38 +207,11 @@ def generate_demo_data():
     employments = ["正社員 (公務員含む)", "契約・嘱託社員", "派遣社員"]
     job_types = ["営業系", "事務・管理系", "技術・研究系", "サービス・販売・現場系"]
     service_years_list = ["3年未満 (新人・若手)", "3年〜10年 (中堅)", "10年以上 (ベテラン)"]
-    
-    # シナリオ情報（30問）
-    categories = ["身体的攻撃", "精神的攻撃", "人間関係からの切り離し", "過大な要求", "過小な要求", "個の侵害"]
-    
-    # シナリオIDとタイプのマッピング（実際のDBに合わせる）
-    scenario_mapping = []
-    for i in range(1, 31):
-        cat = categories[(i-1) // 5]
-        if i % 5 == 1:
-            scenario_type = "Black"
-            title = f"{cat}の違法事例"
-        elif i % 5 == 2:
-            scenario_type = "White"
-            title = f"{cat}の適法事例"
-        else:
-            scenario_type = "Gray"
-            title = f"{cat}のグレー事例{(i % 5) - 2}"
-        
-        scenario_mapping.append({
-            "scenario_id": i,
-            "category": cat,
-            "type": scenario_type,
-            "title": title,
-            "text": f"【デモ】{title}の詳細な状況説明。この事例は統計的に生成されたシミュレーションデータです。"
-        })
-    
-    # デモユーザーを25人生成
+
     demo_records = []
     num_users = 25
-    
+
     for user_idx in range(1, num_users + 1):
-        # ユーザー属性をランダム生成
         user_attrs = {
             "user_id": user_idx,
             "age": np.random.choice(ages),
@@ -247,26 +222,32 @@ def generate_demo_data():
             "job_type": np.random.choice(job_types),
             "service_years": np.random.choice(service_years_list)
         }
-        
-        # 各シナリオに対する回答を生成
-        for scenario in scenario_mapping:
-            # タイプに応じて回答分布を変える
-            if scenario["type"] == "Black":
-                # 違法行為 → 高い認識（平均5.0、SD=0.8）
+
+        for scenario in scenarios:
+            s_type = scenario.get("type", "Gray")
+            if s_type == "Black":
                 rating = int(np.clip(np.random.normal(5.0, 0.8), 1, 6))
-            elif scenario["type"] == "White":
-                # 適法行為 → 低い認識（平均2.5、SD=0.8）
+            elif s_type == "White":
                 rating = int(np.clip(np.random.normal(2.5, 0.8), 1, 6))
-            else:  # Gray
-                # 判断が分かれる → 中間でばらつき大（平均3.5、SD=1.5）
+            else:
                 rating = int(np.clip(np.random.normal(3.5, 1.5), 1, 6))
-            
+
             record = {
                 "response_id": len(demo_records) + 1,
                 "rating": rating,
                 **user_attrs,
-                **scenario
+                # 実シナリオのフィールドをそのまま埋め込む
+                "scenario_id": scenario.get("scenario_id"),
+                "category": scenario.get("category"),
+                "type": s_type,
+                "title": scenario.get("title"),
+                "text": scenario.get("text"),
             }
             demo_records.append(record)
-    
+
     return pd.DataFrame(demo_records)
+
+# -------------------------------------------------------
+# デモデータ生成（実シナリオ活用版）
+# -------------------------------------------------------
+# 旧名の後方互換（必要なら残すが、今回は削除して一本化）

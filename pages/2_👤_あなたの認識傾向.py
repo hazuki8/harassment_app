@@ -75,7 +75,7 @@ with st.spinner("診断結果を分析中..."):
     
     # 2. 全体平均データのマージ
     if stats_df.empty:
-        # デモデータから統計を生成
+        # 実シナリオを用いたデモデータから統計を生成
         demo_df = generate_demo_data()
         stats_df = demo_df.groupby('scenario_id').agg(
             avg_rating=('rating', 'mean'),
