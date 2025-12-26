@@ -511,10 +511,11 @@ st.subheader("📝 回答詳細")
 st.caption("あなたの回答に基づき、各シナリオの詳細な分析結果を表示します。 法的リスクや世の中の感覚とのズレを確認できます。")
 
 # フィルタ状態のセッション管理
-st.session_state.setdefault("detail_filter", "⚠️ 法的リスク項目")
 st.session_state.setdefault("show_all_details", False)
+# デフォルトで「法的リスク項目」を選択
+st.session_state.setdefault("detail_filter", "⚠️ 法的リスク項目")
 
-# コールバックで相互同期（ウィジェット生成後に発火する安全な方法）
+# コールバックで相互同期
 def _on_show_all_change():
     if st.session_state.get("show_all_details"):
         st.session_state["detail_filter"] = None
@@ -535,9 +536,9 @@ show_all = st.checkbox(
 
 # Pillsフィルタ（全シナリオ一覧は「フィルタ解除」で制御）
 filter_options = ["⚠️ 法的リスク項目", "📈 世間より「厳しい」項目", "📉 世間より「甘い」項目"]
-default_filter = None if st.session_state.get("show_all_details") else st.session_state.get("detail_filter")
 try:
-    selection = st.pills("表示フィルタ", filter_options, default=default_filter, key="detail_filter", on_change=_on_filter_change)
+    # セッション状態で初期値管理
+    selection = st.pills("表示フィルタ", filter_options, key="detail_filter", on_change=_on_filter_change)
 except AttributeError:
     # radioには未選択状態がないため、全表示時はNone扱いにする
     if show_all:
