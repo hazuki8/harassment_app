@@ -206,22 +206,40 @@ else:
 
     st.markdown("---")
     
-    if st.button("回答を送信して結果を見る", type="primary", use_container_width=True):
+    # 送信中フラグの初期化
+    if "is_submitting" not in st.session_state:
+        st.session_state.is_submitting = False
+    
+    if st.button("回答を送信して結果を見る", type="primary", use_container_width=True, disabled=st.session_state.is_submitting):
+        # 二重送信防止：すでに送信中なら何もしない
+        if st.session_state.is_submitting:
+            st.stop()
+        
+        st.session_state.is_submitting = True  # フラグを立てる
+        
         unanswered_ids = [sid for sid in st.session_state.scenario_order 
                           if sid not in st.session_state.temp_responses or st.session_state.temp_responses[sid] is None]
         
         if unanswered_ids:
+            st.session_state.is_submitting = False  # エラー時は解除
             unanswered_indices = [st.session_state.scenario_order.index(sid) + 1 for sid in unanswered_ids]
             first_unanswered = unanswered_indices[0]
             st.error(f"未回答の質問があります（残り {len(unanswered_indices)}問）")
             components.html(f"""<script>setTimeout(()=>{{const t=window.parent.document.getElementById('question-{first_unanswered}');if(t)t.scrollIntoView({{behavior:'smooth',block:'center'}});}},200);</script>""", height=0)
         else:
             with st.spinner("結果を生成中..."):
+                # 念のため再度チェック（リロードなどの対策）
+                if "user_id" in st.session_state and st.session_state.user_id:
+                    existing_responses = get_user_responses(st.session_state.user_id)
+                    if existing_responses and len(existing_responses) > 0:
+                        st.session_state.is_submitting = False
+                        st.session_state.show_completion_screen = True
+                        st.rerun()
+                
                 attrs = st.session_state.user_attributes_temp
                 new_user_id = register_user(session_id, **attrs)
                 
                 if new_user_id:
-                    # ★変更点: 一括保存用のDictを作成して高速保存
                     responses_dict = {}
                     for scenario_id, response in st.session_state.temp_responses.items():
                         responses_dict[scenario_id] = options.index(response) + 1
@@ -231,9 +249,12 @@ else:
                         st.session_state.temp_responses = {} 
                         st.session_state.user_attributes_temp = {}
                         st.session_state.diagnosis_started = False
+                        st.session_state.is_submitting = False  # 完了時にリセット
                         st.session_state.show_completion_screen = True
                         st.rerun()
                     else:
+                        st.session_state.is_submitting = False  # エラー時は解除
                         st.error("回答の保存に失敗しました。")
                 else:
+                    st.session_state.is_submitting = False  # エラー時は解除
                     st.error("データの保存に失敗しました。")

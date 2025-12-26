@@ -38,10 +38,28 @@ use_demo_data = False
 # データ不足時はデモデータ生成
 if stats_df.empty:
     use_demo_data = True
-    st.info("🔬 統計データがまだ蓄積されていないため、研究用のデモデータを使用します。", icon="ℹ️")
+    st.warning("""
+    ### デモデータモード
+    
+    統計データがまだ蓄積されていないため、**研究・実験用のデモデータ**を使用します。
+    
+    **📌 透明性に関する注意：**
+    - 「世の中の感覚」との比較データは **架空のシミュレーションデータ** です
+    - 実際のユーザーの回答ではありません
+    - ユーザー数が **10人以上** になると、自動的に実データに切り替わります
+    """, icon="⚠️")
 elif len(stats_df) < 10:
     use_demo_data = True
-    st.info("🔬 データ数が不足しているため、研究用のデモデータで補完します。", icon="ℹ️")
+    st.warning("""
+    ### デモデータ補完モード
+    
+    データ数が不足しているため、**研究・実験用のデモデータ**で補完します。
+    
+    **📌 透明性に関する注意：**
+    - 現在のデータ数: {}人
+    - 「世の中の感覚」との比較には **デモデータが混在** しています
+    - ユーザー数が **10人以上** になると、完全に実データに切り替わります
+    """.format(len(stats_df)), icon="⚠️")
 
 with st.spinner("診断結果を分析中..."):
     # 1. ベースのデータフレーム作成
@@ -117,18 +135,11 @@ with st.spinner("診断結果を分析中..."):
 # UI表示：トップサマリー
 # ==========================================
 
-demo_notice = " 💻 (デモデータ使用)" if use_demo_data else ""
+demo_notice = " (デモデータ使用)" if use_demo_data else ""
 st.title(f"👤 あなたの認識傾向{demo_notice}")
 st.markdown("""
 あなたの回答データをもとに、**法的規範との整合性**および**世の中の感覚とのズレ**を分析・可視化しました。
 """)
-
-if use_demo_data:
-    st.info("""
-    **📌 透明性に関する注意：**
-    - 「世の中の感覚」の比較には、統計的に生成された **デモデータ** を使用しています
-    - 実際のユーザーが10人以上になると、自動的に実データに切り替わります
-    """, icon="ℹ️")
 
 # -------------------------------------------------------
 # 1. 左右比較パネル 
@@ -713,7 +724,7 @@ def render_detail_card(row, tag_text, tag_color, bg_color, show_severity=False):
         <div style="margin-top:10px; background-color:{bg_color}; padding:15px; border-radius:8px; border:1px solid {tag_color}30;">
             <div style="font-weight:bold; font-size:1.0em; color:#444;">💡 解説</div>
             <div style="font-size:0.95em; margin-bottom:12px; line-height:1.5;">{explanation}</div>
-            <div style="font-weight:bold; font-size:1.0em; color:#444;">🚀 改善アクション</div>
+            <div style="font-weight:bold; font-size:1.0em; color:#444;">📣 アドバイス</div>
             <div style="font-size:0.95em; font-weight:bold; color:{tag_color}; line-height:1.5;">{advice}</div>
         """, unsafe_allow_html=True)
         
