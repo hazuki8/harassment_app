@@ -178,7 +178,7 @@ else:
 
     st.title("⚖️ パワハラ認識チェック")
     st.progress(len(st.session_state.temp_responses) / total_q, text="回答進捗")
-    st.caption(f"全 {total_q} 問。あなたの直感に近いものを選んでください。")
+    st.caption(f"全 {total_q} 問。ハラスメントや問題行動と感じるかどうかあなたの直感に近いものを選んでください。")
 
     options = ["全く感じない", "あまり感じない", "どちらかと言えば感じない", "どちらかと言えば感じる", "かなり感じる", "強く感じる"]
 
