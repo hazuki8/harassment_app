@@ -206,15 +206,16 @@ with c_breakdown:
             """
         )
         # 認識の割れ具合の閾値ベース着色（〜1.0=緑, 1.0〜1.3=黄, 1.3以上=赤）
+        # ダークモード・ライトモード両対応の視認性の高い色
         def _conflict_bg(v):
             if pd.isna(v):
                 return ''
             if v < 1.0:
-                return 'background-color: #e9f7ef; color: black;'  # light green + 黒文字
+                return 'background-color: #b7e4c7; color: #1a1a1a;'  # ミントグリーン + ダークグレー文字
             elif v < 1.3:
-                return 'background-color: #fff9e6; color: black;'  # light yellow + 黒文字
+                return 'background-color: #ffe066; color: #1a1a1a;'  # マスタードイエロー + ダークグレー文字
             else:
-                return 'background-color: #fdecea; color: black;'  # light red + 黒文字
+                return 'background-color: #ffadad; color: #1a1a1a;'  # コーラルレッド + ダークグレー文字
         # 行数に応じて高さを自動調整（空白行の発生を抑制）
         _row_h = 36
         _base_h = 48
@@ -602,7 +603,7 @@ st.divider()
 st.markdown("""
 <div style="text-align: center; margin-bottom: 20px;">
     <h4 style="margin-bottom: 10px;">📋 研究へのご協力のお願い</h4>
-    <p style="color: #666;">
+    <p>
         本システムの利用を通じて、ハラスメントに対する認識に変化はありましたか？<br>
         今後の研究・システム改善のため、簡単なアンケートへのご協力をお願いいたします。<br>
         <span style="font-size: 0.9em;">(所要時間：約3分 / 匿名回答)</span>

@@ -717,9 +717,9 @@ def render_detail_card(row, tag_text, tag_color, bg_color, show_severity=False):
         
         st.markdown(f"""
         <div style="margin-top:10px; background-color:{bg_color}; padding:15px; border-radius:8px; border:1px solid {tag_color}30;">
-            <div style="font-weight:bold; font-size:1.0em; color:#444;">💡 解説</div>
-            <div style="font-size:0.95em; margin-bottom:12px; line-height:1.5;">{explanation}</div>
-            <div style="font-weight:bold; font-size:1.0em; color:#444;">📣 アドバイス</div>
+            <div style="font-weight:bold; font-size:1.0em; color:#222;">💡 解説</div>
+            <div style="font-size:0.95em; margin-bottom:12px; line-height:1.5; color:#222;">{explanation}</div>
+            <div style="font-weight:bold; font-size:1.0em; color:#222;">📣 アドバイス</div>
             <div style="font-size:0.95em; font-weight:bold; color:{tag_color}; line-height:1.5;">{advice}</div>
         """, unsafe_allow_html=True)
         
@@ -727,7 +727,7 @@ def render_detail_card(row, tag_text, tag_color, bg_color, show_severity=False):
         if legal_ref and legal_ref.strip():
             st.markdown(f"""
             <div style="margin-top:12px;">
-                <div style="font-weight:bold; font-size:0.95em; color:#666;">📋 根拠</div>
+                <div style="font-weight:bold; font-size:0.95em; color:#666;">📖 根拠</div>
                 <div style="font-size:0.9em; color:#666; line-height:1.5; margin-top:5px; font-style:italic;">{legal_ref}</div>
             </div>
             </div>
@@ -824,7 +824,7 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align: center; margin-bottom: 20px;">
     <h4 style="margin-bottom: 10px;">📊 さらに詳しく分析する</h4>
-    <p style="color: #666;">
+    <p>
         「世の中の認識」と比較して、あなたのギャップがどのカテゴリに集中しているか、<br>
         属性別（年代・役職など）にどのような違いがあるかを確認できます。
     </p>
