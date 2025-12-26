@@ -6,6 +6,10 @@ import numpy as np
 import textwrap
 from utils.db import get_global_analysis_data_view, generate_demo_data
 
+# 初回訪問フラグ
+if "visited_page3" not in st.session_state:
+    st.session_state.visited_page3 = True
+
 st.set_page_config(page_title="世の中の傾向", page_icon="🌏", layout="wide")
 
 # カスタムCSS
@@ -206,11 +210,11 @@ with c_breakdown:
             if pd.isna(v):
                 return ''
             if v < 1.0:
-                return 'background-color: #e9f7ef'  # light green
+                return 'background-color: #e9f7ef; color: black;'  # light green + 黒文字
             elif v < 1.3:
-                return 'background-color: #fff9e6'  # light yellow
+                return 'background-color: #fff9e6; color: black;'  # light yellow + 黒文字
             else:
-                return 'background-color: #fdecea'  # light red
+                return 'background-color: #fdecea; color: black;'  # light red + 黒文字
         # 行数に応じて高さを自動調整（空白行の発生を抑制）
         _row_h = 36
         _base_h = 48
@@ -589,3 +593,24 @@ with tab_table:
             "シナリオ本文": st.column_config.TextColumn("シナリオ本文", width="large")
         }
     )
+
+# ==========================================
+# 4. ユーザーアンケートへの誘導
+# ==========================================
+st.divider()
+
+st.markdown("""
+<div style="text-align: center; margin-bottom: 20px;">
+    <h4 style="margin-bottom: 10px;">📋 研究へのご協力のお願い</h4>
+    <p style="color: #666;">
+        本システムの利用を通じて、ハラスメントに対する認識に変化はありましたか？<br>
+        今後の研究・システム改善のため、簡単なアンケートへのご協力をお願いいたします。<br>
+        <span style="font-size: 0.9em;">(所要時間：約3分 / 匿名回答)</span>
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+col_q_l, col_q_c, col_q_r = st.columns([1, 2, 1])
+with col_q_c:
+    if st.button("📝 アンケートに回答する", type="primary", use_container_width=True):
+        st.switch_page("pages/4_📋_ユーザーアンケート.py")

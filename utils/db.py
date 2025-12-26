@@ -246,3 +246,48 @@ def generate_demo_data():
             demo_records.append(record)
 
     return pd.DataFrame(demo_records)
+
+# ==========================================
+# ユーザーテスト（フィードバック）関連
+# ==========================================
+
+def save_feedback(user_id, q1_a, q1_b, q1_c, q2_a, q2_b, q3_a, q3_b, q4, q5, q6, q7, q8, q9, q10, q11, q12):
+    """
+    ユーザーテストの回答を保存する
+    質問番号と変数名を完全に一致させた新バージョン
+    """
+    data = {
+        "user_id": user_id,
+        "q1_a": q1_a,
+        "q1_b": q1_b,
+        "q1_c": q1_c,
+        "q2_a": q2_a,
+        "q2_b": q2_b,
+        "q3_a": q3_a,
+        "q3_b": q3_b,
+        "q4": q4,
+        "q5": q5,
+        "q6": q6,
+        "q7": q7,
+        "q8": q8,
+        "q9": q9,
+        "q10": q10,
+        "q11": q11,
+        "q12": q12
+    }
+    try:
+        supabase.table("user_feedback").insert(data).execute()
+        return True
+    except Exception as e:
+        st.error(f"フィードバック保存エラー: {e}")
+        return False
+
+def check_feedback_status(user_id):
+    """
+    ユーザーがすでにフィードバック回答済みか確認
+    """
+    try:
+        response = supabase.table("user_feedback").select("feedback_id").eq("user_id", user_id).execute()
+        return len(response.data) > 0
+    except:
+        return False

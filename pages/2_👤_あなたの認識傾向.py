@@ -6,6 +6,10 @@ import numpy as np
 import textwrap
 from utils.db import get_user_responses, get_global_averages_stats, generate_demo_data
 
+# 初回訪問フラグ
+if "visited_page2" not in st.session_state:
+    st.session_state.visited_page2 = True
+
 # ページ設定
 st.set_page_config(page_title="あなたの認識傾向", layout="wide")
 
@@ -161,17 +165,17 @@ card_style = """
 # --- 左側：法的規範との比較 ---
 with col1:
     if total_lenient > 0 and total_strict > 0:
-        legal_status = "🔴 認識基準が不安定"
+        legal_status = "認識基準が不安定"
         legal_color = "#dc3545" # Red
         legal_desc = (
             "違法とされる行為を許容する一方で、適法とされる行為をハラスメントと評価するなど、判断基準が一貫していません。<br>"
             "厚生労働省のパワハラ防止指針などを確認し、認識を整理する必要があります。<br><br>"
             f"<b>【不足: {total_lenient}件】</b> (重度 {cnt_critical_lenient} / 軽度 {cnt_mild_lenient})<br>"
             f"<b>【過剰: {total_strict}件】</b> (重度 {cnt_critical_strict} / 軽度 {cnt_mild_strict})<br><br>"
-            "👇 詳細は下部の「<b>回答詳細</b>」で、法的基準を再確認し、ご自身の基準をチューニングすることをお勧めします。"
+            "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     elif total_lenient > 0:
-        legal_status = "🔴 認識が不足"
+        legal_status = "認識が不足"
         legal_color = "#dc3545"
         legal_desc = (
             "法的規範と比べて、違法とされる行為の問題性を十分に捉えられていない傾向があります。<br>"
@@ -180,10 +184,10 @@ with col1:
             f"・重度（是正必須）: {cnt_critical_lenient}件<br>"
             f"・軽度（要確認）: {cnt_mild_lenient}件<br><br>"
             "あなたの感覚よりも「法的なラインはもっと手前にある」と意識し、認識をアップデートする必要があります。<br>"
-            "👇 詳細は下部の「<b>回答詳細</b>」セクションで各シナリオの解説をご確認ください。"
+            "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     elif total_strict > 0:
-        legal_status = "🔴 認識が過剰"
+        legal_status = "認識が過剰"
         legal_color = "#dc3545"
         legal_desc = (
             "法的規範と比べて、本来は問題とされない行為の問題性を強く捉えすぎる傾向が見られます。<br>"
@@ -192,10 +196,10 @@ with col1:
             f"・重度（是正必須）: {cnt_critical_strict}件<br>"
             f"・軽度（要確認）　: {cnt_mild_strict}件<br><br>"
             "厚生労働省のパワハラ防止指針などを確認し、認識を整理する必要があります。<br>"
-            "👇 詳細は下部の「<b>回答詳細</b>」セクションで各シナリオの解説をご確認ください。"
+            "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     else:
-        legal_status = "🟢 基準と合致"
+        legal_status = "基準と合致"
         legal_color = "#28a745" # Green
         legal_desc = (
             "法的に白黒が明確な事例について、あなたの認識は法的規範と概ね一致しています。<br>"
@@ -395,9 +399,9 @@ with tab_cat_social:
 st.markdown("---")
 
 # ==========================================
-# UI表示：3. 世の中との認識ギャップ分布
+# UI表示：3. 世間との認識ギャップ分布
 # ==========================================
-st.subheader("📍 世の中との認識ギャップ分布")
+st.subheader("📍 世間との認識ギャップ分布")
 st.caption("全30問における、あなたの認識と世の中の平均との差を示しています。")
 
 st.info("""
@@ -812,3 +816,22 @@ if not df_display.empty:
         )
 else:
     st.info(empty_msg)
+
+# ==========================================
+# 5. 次のアクション (ページ遷移ボタン)
+# ==========================================
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; margin-bottom: 20px;">
+    <h4 style="margin-bottom: 10px;">📊 さらに詳しく分析する</h4>
+    <p style="color: #666;">
+        「世の中の認識」と比較して、あなたのギャップがどのカテゴリに集中しているか、<br>
+        属性別（年代・役職など）にどのような違いがあるかを確認できます。
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+col_next_l, col_next_c, col_next_r = st.columns([1, 2, 1])
+with col_next_c:
+    if st.button("🌍 世の中の認識傾向を見る", type="primary", use_container_width=True):
+        st.switch_page("pages/3_🌍_世の中の認識傾向.py")
