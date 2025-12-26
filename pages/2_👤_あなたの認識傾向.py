@@ -172,7 +172,7 @@ with col1:
             "厚生労働省のパワハラ防止指針などを確認し、認識を整理する必要があります。<br><br>"
             f"<b>【不足: {total_lenient}件】</b> (重度 {cnt_critical_lenient} / 軽度 {cnt_mild_lenient})<br>"
             f"<b>【過剰: {total_strict}件】</b> (重度 {cnt_critical_strict} / 軽度 {cnt_mild_strict})<br><br>"
-            "👇 詳細は下部の「<b>回答詳細</b>」で、法的基準を再確認し、ご自身の基準をチューニングすることをお勧めします。"
+            "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     elif total_lenient > 0:
         legal_status = "🔴 認識が不足"
@@ -184,7 +184,7 @@ with col1:
             f"・重度（是正必須）: {cnt_critical_lenient}件<br>"
             f"・軽度（要確認）: {cnt_mild_lenient}件<br><br>"
             "あなたの感覚よりも「法的なラインはもっと手前にある」と意識し、認識をアップデートする必要があります。<br>"
-            "👇 詳細は下部の「<b>回答詳細</b>」セクションで各シナリオの解説をご確認ください。"
+            "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     elif total_strict > 0:
         legal_status = "🔴 認識が過剰"
@@ -196,7 +196,7 @@ with col1:
             f"・重度（是正必須）: {cnt_critical_strict}件<br>"
             f"・軽度（要確認）　: {cnt_mild_strict}件<br><br>"
             "厚生労働省のパワハラ防止指針などを確認し、認識を整理する必要があります。<br>"
-            "👇 詳細は下部の「<b>回答詳細</b>」セクションで各シナリオの解説をご確認ください。"
+            "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     else:
         legal_status = "🟢 基準と合致"
