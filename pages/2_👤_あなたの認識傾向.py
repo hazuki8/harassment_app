@@ -13,6 +13,12 @@ if "visited_page2" not in st.session_state:
 # ページ設定
 st.set_page_config(page_title="あなたの認識傾向", layout="wide")
 
+# モバイル向け表示トグル
+is_mobile = st.toggle("📱 モバイル向け表示", value=False, help="スマホではONにするとホバー表示を短く折り返し、フォントとマーカーサイズを最適化します。")
+wrap_w = 22 if is_mobile else 40
+hover_font_size = 11 if is_mobile else 13
+marker_size = 10 if is_mobile else 12
+
 # ツールチップ用にテキストを改行する関数
 def format_hover_text(text, width=40):
     if not isinstance(text, str): return ""
@@ -344,16 +350,19 @@ with tab_cat_legal:
                 range=[-3, 3], 
                 title="← 認識が不足  ｜ 認識が過剰  →",
                 tickvals=[-2, 0, 2],
-                ticktext=['要注意', '適正', '要注意']
+                ticktext=['要注意', '適正', '要注意'],
+                fixedrange=True
             ),
-            yaxis=dict(autorange="reversed"), 
+            yaxis=dict(autorange="reversed", fixedrange=True), 
             barmode='relative', 
-            height=400,
-            margin=dict(l=0,r=0,t=10,b=0), 
+            height=420 if is_mobile else 400,
+            margin=dict(l=0,r=0,t=10,b=100 if is_mobile else 0), 
             showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", y=-0.35 if is_mobile else 1.02, xanchor="center" if is_mobile else "right", x=0.5 if is_mobile else 1, font=dict(size=9 if is_mobile else 10))
         )
-        st.plotly_chart(fig_legal, use_container_width=True)
+        if is_mobile:
+            fig_legal.update_traces(text=None, selector=dict(type='bar'))
+        st.plotly_chart(fig_legal, use_container_width=True, config={"displayModeBar": False} if is_mobile else None)
     else:
         st.info("データが不足しています")
 
@@ -387,14 +396,19 @@ with tab_cat_social:
             range=[-2.5, 2.5], 
             title="← 甘い (寛容) ｜ 厳しい (厳格) →",
             tickvals=[-2, 0, 2],
-            ticktext=['甘い', '世間平均', '厳しい']
+            ticktext=['甘い', '世間平均', '厳しい'],
+            fixedrange=True
         ),
-        yaxis=dict(autorange="reversed"), 
+        yaxis=dict(autorange="reversed", fixedrange=True), 
         margin=dict(l=0,r=0,t=10,b=0), 
-        height=400,
-        showlegend=False
+        height=420 if is_mobile else 400,
+        showlegend=False,
+        uniformtext_minsize=8 if is_mobile else 10,
+        uniformtext_mode='hide'
     )
-    st.plotly_chart(fig_gap, use_container_width=True)
+    if is_mobile:
+        fig_gap.update_traces(text=None)
+    st.plotly_chart(fig_gap, use_container_width=True, config={"displayModeBar": False} if is_mobile else None)
 
 st.markdown("---")
 
@@ -427,7 +441,7 @@ st.info("""
 """, icon="ℹ️")
 
 # --- 散布図描画ロジック ---
-def plot_scatter_analysis(df_scatter: pd.DataFrame):
+def plot_scatter_analysis(df_scatter: pd.DataFrame, wrap_width=40, hover_font_size=13, marker_size=12):
     df_plot = df_scatter.copy()
     
     # ホバーテキスト準備
@@ -436,7 +450,7 @@ def plot_scatter_analysis(df_scatter: pd.DataFrame):
     else:
         df_plot['text_body'] = df_plot['text']
         
-    df_plot['hover_text'] = df_plot['text_body'].apply(lambda x: format_hover_text(x, 40))
+    df_plot['hover_text'] = df_plot['text_body'].apply(lambda x: format_hover_text(x, wrap_width))
     df_plot['is_legal_risk'] = df_plot['legal_level'].apply(lambda x: True if x != "なし" else False)
 
     fig = go.Figure()
@@ -481,7 +495,7 @@ def plot_scatter_analysis(df_scatter: pd.DataFrame):
             mode='markers', 
             name=cat,
             marker=dict(
-                size=12, 
+                size=marker_size, 
                 color=colors[i % len(colors)], 
                 symbol=['x' if r else 'circle' for r in df_cat['is_legal_risk']], 
                 line=dict(width=1, color='white')
@@ -498,15 +512,17 @@ def plot_scatter_analysis(df_scatter: pd.DataFrame):
     fig.update_layout(
         xaxis_title="世の中の平均", 
         yaxis_title="あなたの回答", 
-        height=500, 
-        margin=dict(l=20,r=20,t=20,b=20), 
+        height=550 if is_mobile else 500, 
+        margin=dict(l=20,r=20,t=20,b=100 if is_mobile else 20), 
         plot_bgcolor='white',
-        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25 if is_mobile else -0.2, xanchor="center", x=0.5, font=dict(size=9 if is_mobile else 10)),
+        showlegend=True,
+        hoverlabel=dict(font_size=hover_font_size)
     )
     return fig
 
-fig_map = plot_scatter_analysis(df)
-st.plotly_chart(fig_map, use_container_width=True)
+fig_map = plot_scatter_analysis(df, wrap_width=wrap_w, hover_font_size=hover_font_size, marker_size=marker_size)
+st.plotly_chart(fig_map, use_container_width=True, config={"displayModeBar": False} if is_mobile else None)
 
 st.markdown("---")
 
@@ -717,9 +733,9 @@ def render_detail_card(row, tag_text, tag_color, bg_color, show_severity=False):
         
         st.markdown(f"""
         <div style="margin-top:10px; background-color:{bg_color}; padding:15px; border-radius:8px; border:1px solid {tag_color}30;">
-            <div style="font-weight:bold; font-size:1.0em; color:#444;">💡 解説</div>
-            <div style="font-size:0.95em; margin-bottom:12px; line-height:1.5;">{explanation}</div>
-            <div style="font-weight:bold; font-size:1.0em; color:#444;">📣 アドバイス</div>
+            <div style="font-weight:bold; font-size:1.0em; color:#222;">💡 解説</div>
+            <div style="font-size:0.95em; margin-bottom:12px; line-height:1.5; color:#222;">{explanation}</div>
+            <div style="font-weight:bold; font-size:1.0em; color:#222;">📣 アドバイス</div>
             <div style="font-size:0.95em; font-weight:bold; color:{tag_color}; line-height:1.5;">{advice}</div>
         """, unsafe_allow_html=True)
         
@@ -727,7 +743,7 @@ def render_detail_card(row, tag_text, tag_color, bg_color, show_severity=False):
         if legal_ref and legal_ref.strip():
             st.markdown(f"""
             <div style="margin-top:12px;">
-                <div style="font-weight:bold; font-size:0.95em; color:#666;">📋 根拠</div>
+                <div style="font-weight:bold; font-size:0.95em; color:#666;">📖 根拠</div>
                 <div style="font-size:0.9em; color:#666; line-height:1.5; margin-top:5px; font-style:italic;">{legal_ref}</div>
             </div>
             </div>
@@ -824,7 +840,7 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align: center; margin-bottom: 20px;">
     <h4 style="margin-bottom: 10px;">📊 さらに詳しく分析する</h4>
-    <p style="color: #666;">
+    <p>
         「世の中の認識」と比較して、あなたのギャップがどのカテゴリに集中しているか、<br>
         属性別（年代・役職など）にどのような違いがあるかを確認できます。
     </p>

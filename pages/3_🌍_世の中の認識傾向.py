@@ -42,6 +42,21 @@ def format_hover_text(text, width=40):
     if not isinstance(text, str): return ""
     return "<br>".join(textwrap.wrap(text, width=width))
 
+# モバイル向け表示トグル
+is_mobile = st.toggle("📱 モバイル向け表示", value=False, help="スマホではONにするとホバー表示を短く折り返し、フォントとマーカーサイズを最適化します。")
+wrap_w = 22 if is_mobile else 40
+hover_font_size = 11 if is_mobile else 13
+marker_size = 10 if is_mobile else 14
+
+# モバイル時は長文を短縮してから折り返す
+def format_hover_compact(text: str, wrap_width: int, mobile: bool, max_chars: int = 140) -> str:
+    if not isinstance(text, str):
+        return ""
+    t = text.strip()
+    if mobile and len(t) > max_chars:
+        t = t[: max_chars - 1] + "…"
+    return "<br>".join(textwrap.wrap(t, width=wrap_width))
+
 # ==========================================
 # 0. データロード & 前処理
 # ==========================================
@@ -206,15 +221,16 @@ with c_breakdown:
             """
         )
         # 認識の割れ具合の閾値ベース着色（〜1.0=緑, 1.0〜1.3=黄, 1.3以上=赤）
+        # ダークモード・ライトモード両対応の視認性の高い色
         def _conflict_bg(v):
             if pd.isna(v):
                 return ''
             if v < 1.0:
-                return 'background-color: #e9f7ef; color: black;'  # light green + 黒文字
+                return 'background-color: #b7e4c7; color: #1a1a1a;'  # ミントグリーン + ダークグレー文字
             elif v < 1.3:
-                return 'background-color: #fff9e6; color: black;'  # light yellow + 黒文字
+                return 'background-color: #ffe066; color: #1a1a1a;'  # マスタードイエロー + ダークグレー文字
             else:
-                return 'background-color: #fdecea; color: black;'  # light red + 黒文字
+                return 'background-color: #ffadad; color: #1a1a1a;'  # コーラルレッド + ダークグレー文字
         # 行数に応じて高さを自動調整（空白行の発生を抑制）
         _row_h = 36
         _base_h = 48
@@ -309,7 +325,7 @@ with st.container():
             mean=('rating', 'mean'), std=('rating', 'std'), count=('rating', 'count')
         ).reset_index()
         
-        scenario_stats['hover_text'] = scenario_stats['text'].apply(lambda x: format_hover_text(x, 40))
+        scenario_stats['hover_text'] = scenario_stats['text'].apply(lambda x: format_hover_text(x, wrap_w))
 
         fig = go.Figure()
         # Zones
@@ -327,16 +343,24 @@ with st.container():
                 if not d.empty:
                     fig.add_trace(go.Scatter(
                         x=d['mean'], y=d['std'], mode='markers', name=cat, legendgroup=cat, showlegend=True,
-                        marker=dict(size=14, symbol=symbol_map[t], color=cat_colors[cat], line=dict(width=1, color='white'), opacity=0.9),
+                        marker=dict(size=marker_size, symbol=symbol_map[t], color=cat_colors[cat], line=dict(width=1, color='white'), opacity=0.9),
                         customdata=d['hover_text'],
                         text=d['title'],
                         hovertemplate="%{text}<br><br>%{customdata}<br><br><b>平均スコア:</b> %{x:.2f}<br><b>認識の割れ具合:</b> %{y:.2f}<extra></extra>"
                     ))
         
-        fig.update_layout(xaxis_title="ハラスメント強度", yaxis_title="認識の割れ具合", height=550, margin=dict(l=0,r=0,t=10,b=0), legend=dict(orientation="h", y=1.1))
+        fig.update_layout(
+            xaxis_title="ハラスメント強度", 
+            yaxis_title="認識の割れ具合", 
+            height=620 if is_mobile else 550, 
+            margin=dict(l=0,r=0,t=10,b=120 if is_mobile else 80), 
+            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(size=9 if is_mobile else 10)),
+            showlegend=True,
+            hoverlabel=dict(font_size=hover_font_size)
+        )
         names = set()
         fig.for_each_trace(lambda trace: trace.update(showlegend=False) if (trace.name in names) else names.add(trace.name))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False} if is_mobile else None)
 
 st.markdown("---")
 
@@ -446,7 +470,7 @@ if group_a and group_b and group_a != group_b:
         
         
         if top is not None and not top.empty:
-            top['hover_text'] = top['text'].apply(lambda x: format_hover_text(x, 40))
+            top['hover_text'] = top['text'].apply(lambda x: format_hover_text(x, wrap_w))
             
             fig_d = go.Figure()
             for i, row in top.iterrows():
@@ -457,27 +481,39 @@ if group_a and group_b and group_a != group_b:
                 ))
                 fig_d.add_trace(go.Scatter(
                     x=[row['a']], y=[row['title']], mode='markers', name=group_a, 
-                    marker=dict(color='#3498db', size=14), showlegend=(i==0),
+                    marker=dict(color='#3498db', size=14), showlegend=(i==0), cliponaxis=False,
                     customdata=[row['hover_text']],
                     text=[row['title']],
                     hovertemplate="%{text}<br><br>%{customdata}<br><br><b>" + group_a + ":</b> %{x:.2f}<extra></extra>"
                 ))
                 fig_d.add_trace(go.Scatter(
                     x=[row['b']], y=[row['title']], mode='markers', name=group_b, 
-                    marker=dict(color='#e74c3c', size=14), showlegend=(i==0),
+                    marker=dict(color='#e74c3c', size=14), showlegend=(i==0), cliponaxis=False,
                     customdata=[row['hover_text']],
                     text=[row['title']],
                     hovertemplate="%{text}<br><br>%{customdata}<br><br><b>" + group_b + ":</b> %{x:.2f}<extra></extra>"
                 ))
                 
+            # X軸レンジは1〜6をベースに、マーカーのはみ出し防止で少し余白を追加
+            fig_d.update_xaxes(range=[0.9, 6.1], dtick=1)
+
             fig_d.update_layout(
                 title=f"認識ギャップ 大きい順 TOP10 ({group_a} vs {group_b})",
-                height=500, 
-                legend=dict(orientation="h", y=1.1),
-                xaxis=dict(title="ハラスメント評価 (右に行くほど厳しい)"),
-                yaxis=dict(autorange="reversed")
+                height=560 if is_mobile else 500, 
+                legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5, font=dict(size=9 if is_mobile else 10)),
+                xaxis=dict(title=dict(text=("ハラスメント評価" if is_mobile else "ハラスメント評価 (右に行くほど厳しい)"), standoff=10), fixedrange=True),
+                yaxis=dict(autorange="reversed", fixedrange=True),
+                margin=dict(l=16, r=32 if is_mobile else 16, t=36 if is_mobile else 36, b=120 if is_mobile else 90),
+                hoverlabel=dict(font_size=hover_font_size)
             )
-            st.plotly_chart(fig_d, use_container_width=True)
+            st.plotly_chart(
+                fig_d,
+                use_container_width=True,
+                config=(
+                    {"displayModeBar": False, "scrollZoom": False, "modeBarButtonsToRemove": ["zoom2d", "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d"]}
+                    if is_mobile else None
+                )
+            )
         else:
             st.warning("比較対象のシナリオが見つかりませんでした。別の属性を選択してみてください。")
         
@@ -533,7 +569,7 @@ with tab_chart:
         d = score_pct[score_pct['rating'] == r]
         d_merged = pd.DataFrame({'title': titles}).merge(d, on='title', how='left').fillna(0)
         d_merged['text'] = d_merged['title'].map(title_text_map).fillna('')
-        d_merged['hover_text'] = d_merged['text'].apply(lambda x: format_hover_text(x, 40))
+        d_merged['hover_text'] = d_merged['text'].apply(lambda x: format_hover_compact(x, wrap_w, is_mobile))
 
         fig_div.add_trace(go.Bar(
             y=d_merged['title'], x=-d_merged['pct'],
@@ -549,7 +585,7 @@ with tab_chart:
         d = score_pct[score_pct['rating'] == r]
         d_merged = pd.DataFrame({'title': titles}).merge(d, on='title', how='left').fillna(0)
         d_merged['text'] = d_merged['title'].map(title_text_map).fillna('')
-        d_merged['hover_text'] = d_merged['text'].apply(lambda x: format_hover_text(x, 40))
+        d_merged['hover_text'] = d_merged['text'].apply(lambda x: format_hover_compact(x, wrap_w, is_mobile))
 
         fig_div.add_trace(go.Bar(
             y=d_merged['title'], x=d_merged['pct'],
@@ -562,14 +598,15 @@ with tab_chart:
     
     fig_div.update_layout(
         barmode='relative', 
-        height=800,
-        xaxis=dict(title="回答割合 (%)", tickvals=[-100, -50, 0, 50, 100], ticktext=['100%', '50%', '0', '50%', '100%']),
-        yaxis=dict(title=""),
-        legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center", yanchor="bottom"),
-        margin=dict(l=0, r=0, t=100, b=0)
+        height=700 if is_mobile else 800,
+        xaxis=dict(title="回答割合 (%)", tickvals=[-100, -50, 0, 50, 100], ticktext=['100%', '50%', '0', '50%', '100%'], fixedrange=True),
+        yaxis=dict(title="", fixedrange=True),
+        legend=dict(orientation='h', yanchor="bottom", y=-0.35 if is_mobile else -0.3, x=0.0, xanchor='left', font=dict(size=9 if is_mobile else 10)),
+        margin=dict(l=0, r=0, t=10 if is_mobile else 80, b=170 if is_mobile else 150),
+        hoverlabel=dict(font_size=hover_font_size)
     )
     fig_div.add_vline(x=0, line_width=1, line_color="black")
-    st.plotly_chart(fig_div, use_container_width=True)
+    st.plotly_chart(fig_div, use_container_width=True, config={"displayModeBar": False} if is_mobile else None)
 
 # Tab 2: 統計データテーブル
 with tab_table:
@@ -602,7 +639,7 @@ st.divider()
 st.markdown("""
 <div style="text-align: center; margin-bottom: 20px;">
     <h4 style="margin-bottom: 10px;">📋 研究へのご協力のお願い</h4>
-    <p style="color: #666;">
+    <p>
         本システムの利用を通じて、ハラスメントに対する認識に変化はありましたか？<br>
         今後の研究・システム改善のため、簡単なアンケートへのご協力をお願いいたします。<br>
         <span style="font-size: 0.9em;">(所要時間：約3分 / 匿名回答)</span>
