@@ -186,9 +186,9 @@ else:
 
     if "temp_responses" not in st.session_state: st.session_state.temp_responses = {}
 
-    st.title("⚖️ パワハラ認識チェック")
+    st.title(" パワハラ認識傾向チェック")
     st.progress(len(st.session_state.temp_responses) / total_q, text="回答進捗")
-    st.caption(f"全 {total_q} 問。あなたの直感に近いものを選んでください。")
+    st.info(f"全 {total_q} 問。各シナリオを読み、その言動にどの程度「ハラスメント」を感じるか、あなたの直感に最も近いものを選んでください。")
 
     options = ["全く感じない", "あまり感じない", "どちらかと言えば感じない", "どちらかと言えば感じる", "かなり感じる", "強く感じる"]
 

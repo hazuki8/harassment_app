@@ -246,3 +246,42 @@ def generate_demo_data():
             demo_records.append(record)
 
     return pd.DataFrame(demo_records)
+
+# ==========================================
+# ユーザーテスト（フィードバック）関連
+# utils/db.py の末尾に追加
+# ==========================================
+
+def save_feedback(user_id, q_anxiety_pre, q_anxiety_post, q_self_awareness, q_clarity, q_confusion, helpful_features, free_comment):
+    """
+    ユーザーテストの回答を保存する
+    """
+    # リストで渡される機能一覧を文字列に変換（例: "法的基準,散布図"）
+    features_str = ",".join(helpful_features) if helpful_features else ""
+    
+    data = {
+        "user_id": user_id,
+        "q_anxiety_pre": q_anxiety_pre,
+        "q_anxiety_post": q_anxiety_post,
+        "q_self_awareness": q_self_awareness,
+        "q_clarity": q_clarity,
+        "q_confusion": q_confusion,
+        "helpful_features": features_str,
+        "free_comment": free_comment
+    }
+    try:
+        supabase.table("user_feedback").insert(data).execute()
+        return True
+    except Exception as e:
+        st.error(f"フィードバック保存エラー: {e}")
+        return False
+
+def check_feedback_status(user_id):
+    """
+    ユーザーがすでにフィードバック回答済みか確認
+    """
+    try:
+        response = supabase.table("user_feedback").select("feedback_id").eq("user_id", user_id).execute()
+        return len(response.data) > 0
+    except:
+        return False
