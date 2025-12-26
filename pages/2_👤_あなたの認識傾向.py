@@ -165,7 +165,7 @@ card_style = """
 # --- 左側：法的規範との比較 ---
 with col1:
     if total_lenient > 0 and total_strict > 0:
-        legal_status = "🔴 認識基準が不安定"
+        legal_status = "認識基準が不安定"
         legal_color = "#dc3545" # Red
         legal_desc = (
             "違法とされる行為を許容する一方で、適法とされる行為をハラスメントと評価するなど、判断基準が一貫していません。<br>"
@@ -175,7 +175,7 @@ with col1:
             "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     elif total_lenient > 0:
-        legal_status = "🔴 認識が不足"
+        legal_status = "認識が不足"
         legal_color = "#dc3545"
         legal_desc = (
             "法的規範と比べて、違法とされる行為の問題性を十分に捉えられていない傾向があります。<br>"
@@ -187,7 +187,7 @@ with col1:
             "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     elif total_strict > 0:
-        legal_status = "🔴 認識が過剰"
+        legal_status = "認識が過剰"
         legal_color = "#dc3545"
         legal_desc = (
             "法的規範と比べて、本来は問題とされない行為の問題性を強く捉えすぎる傾向が見られます。<br>"
@@ -199,7 +199,7 @@ with col1:
             "👇 各シナリオの詳しい解説は、下部の「<b>回答詳細</b>」をご覧ください。"
         )
     else:
-        legal_status = "🟢 基準と合致"
+        legal_status = "基準と合致"
         legal_color = "#28a745" # Green
         legal_desc = (
             "法的に白黒が明確な事例について、あなたの認識は法的規範と概ね一致しています。<br>"
