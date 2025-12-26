@@ -48,12 +48,22 @@ OPT_YEARS = ["3年未満 (新人・若手)", "3年〜10年 (中堅)", "10年以�
 # --- カスタムCSS ---
 st.markdown("""
     <style>
-    .main { background-color: #f8f9fa; }
-    .stRadio label { font-weight: 500; color: #333; }
-    div[data-testid="stForm"] { border: 1px solid #ddd; padding: 20px; border-radius: 10px; background-color: white; }
+    /* フォントウェイトだけ残し、色指定は削除 */
+    .stRadio label { font-weight: 500; }
+    
+    /* 背景色(white)を削除し、枠線だけ残す */
+    div[data-testid="stForm"] { 
+        border: 1px solid #ddd; 
+        padding: 20px; 
+        border-radius: 10px; 
+        /* background-color: white;  ←削除 */
+    }
+    
+    /* 未回答カードの強調は重要なので残すが、文字色を黒に強制して視認性を確保する */
     .unanswered-card {
         border: 3px solid #ff4444 !important;
         background-color: #fff8f8 !important;
+        color: black !important; /* ←追加: 背景が白いので文字は黒にする */
         box-shadow: 0 0 10px rgba(255, 68, 68, 0.2) !important;
     }
     </style>
