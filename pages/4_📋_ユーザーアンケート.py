@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import save_feedback, check_feedback_status
+from utils.db import save_feedback, check_feedback_status, supabase
 
 # ページ設定
 st.set_page_config(page_title="ユーザーアンケート", page_icon="📋", layout="centered")
@@ -21,15 +21,25 @@ if "user_id" not in st.session_state or not st.session_state.user_id:
         st.switch_page("pages/1_📝_パワハラ認識傾向チェック.py")
     st.stop()
 
+# 【重要】回答データの有無チェック
+try:
+    response = supabase.table("responses").select("user_id", count="exact").eq("user_id", st.session_state.user_id).limit(1).execute()
+    has_response_data = response.count > 0 if hasattr(response, 'count') else len(response.data) > 0
+except Exception:
+    has_response_data = False
+
 # ページ閲覧チェック（結果を見ていない人をブロック）
-has_seen_p2 = st.session_state.get("visited_page2", False)
+has_seen_p2 = st.session_state.get("visited_page2", False) and has_response_data  # 回答データもあることが前提
 has_seen_p3 = st.session_state.get("visited_page3", False)
 
 if not has_seen_p2 or not has_seen_p3:
     st.warning("ℹ️ アンケートに回答するには、診断結果（あなたの認識傾向・世の中の認識傾向）の両方を確認していただく必要があります。")
     col1, col2 = st.columns(2)
     with col1:
-        if not has_seen_p2:
+        if not has_response_data:
+            st.error("未実施: 📝 パワハラ認識傾向チェック")
+            if st.button("診断ページへ移動", type="primary", key="go_p1"): st.switch_page("pages/1_📝_パワハラ認識傾向チェック.py")
+        elif not has_seen_p2:
             st.error("未確認: 👤 あなたの認識傾向")
             if st.button("ページへ移動", type="primary", key="go_p2"): st.switch_page("pages/2_👤_あなたの認識傾向.py")
         else:

@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# ▼▼▼ 修正箇所: 同意状態の確認ロジック ▼▼▼
+#  同意状態の確認ロジック 
 # =========================================================
 
 # 1. クエリパラメータからの復帰（ブラウザバックやリロード時用）
@@ -137,7 +137,7 @@ if not st.session_state.diagnosis_started:
         if is_worker:
             st.markdown("---")
             st.markdown("##### お仕事の詳細")
-            st.caption("※ あなたと近い立場の人との比較分析に使います")
+            st.caption("※ 個人を特定せず、属性ごとの統計データとしてのみ活用されます")
             wc1, wc2 = st.columns(2)
             employment = wc1.selectbox("💼 雇用形態", OPT_EMP, index=None, placeholder="選択してください")
             industry = wc1.selectbox("🏢 業界", OPT_IND, index=None, placeholder="選択してください")
@@ -228,7 +228,7 @@ else:
         st.session_state.is_submitting = True  # フラグを立てる
         
         unanswered_ids = [sid for sid in st.session_state.scenario_order 
-                          if sid not in st.session_state.temp_responses or st.session_state.temp_responses[sid] is None]
+                            if sid not in st.session_state.temp_responses or st.session_state.temp_responses[sid] is None]
         
         if unanswered_ids:
             st.session_state.is_submitting = False  # エラー時は解除
