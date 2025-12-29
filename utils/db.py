@@ -79,10 +79,6 @@ def save_responses_bulk(user_id, responses_dict):
         st.error(f"保存エラー: {e}")
         return False
 
-# 後方互換性のため残すが、基本はbulkを使う
-def save_response(user_id, scenario_id, rating):
-    return save_responses_bulk(user_id, {scenario_id: rating})
-
 # -------------------------------------------------------
 # データ取得 
 # -------------------------------------------------------
