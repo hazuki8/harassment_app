@@ -64,7 +64,7 @@ def get_all_scenarios():
         return []
 
 # -------------------------------------------------------
-# 回答保存 (高速化: Bulk Insert)
+# 回答保存 
 # -------------------------------------------------------
 def save_responses_bulk(user_id, responses_dict):
     """
@@ -84,7 +84,7 @@ def save_response(user_id, scenario_id, rating):
     return save_responses_bulk(user_id, {scenario_id: rating})
 
 # -------------------------------------------------------
-# データ取得 (高速化: Join & View)
+# データ取得 
 # -------------------------------------------------------
 
 def get_user_responses(user_id):
@@ -176,27 +176,11 @@ def get_global_analysis_data_view():
         if not response.data:
             return []
         
-        # データはそのまま返す（employment_status は view で定義されている列名）
+        # データはそのまま返す
         return response.data
     except Exception as e:
         st.error(f"分析データ取得エラー: {e}")
         return []
-
-# Page 2の既存ロジック互換用
-def get_global_averages():
-    # 互換性のためダミー構造を返すか、必要なデータだけ返す
-    # 今回はPage 2側で get_global_averages_stats を使うように書き換えるため
-    # この関数は最低限の全体平均だけ返すようにする
-    try:
-        stats = supabase.table("scenario_stats").select("avg_rating, count").execute()
-        df = pd.DataFrame(stats.data)
-        if df.empty: return None
-        return {
-            "overall": df["avg_rating"].mean(),
-            "total_count": df["count"].sum()
-        }
-    except:
-        return None
 
 # -------------------------------------------------------
 # デモデータ生成（研究・実験用）
@@ -260,14 +244,10 @@ def generate_demo_data():
     return pd.DataFrame(demo_records)
 
 # ==========================================
-# ユーザーテスト（フィードバック）関連
+# ユーザーアンケート 関連
 # ==========================================
 
 def save_feedback(user_id, q1_a, q1_b, q1_c, q2_a, q2_b, q3_a, q3_b, q4, q5, q6, q7, q8, q9, q10, q11, q12):
-    """
-    ユーザーテストの回答を保存する
-    質問番号と変数名を完全に一致させた新バージョン
-    """
     data = {
         "user_id": user_id,
         "q1_a": q1_a,
@@ -297,10 +277,8 @@ def save_feedback(user_id, q1_a, q1_b, q1_c, q2_a, q2_b, q3_a, q3_b, q4, q5, q6,
         st.error(f"フィードバック保存エラー: {e}")
         return False
 
+#ユーザーがすでにフィードバック回答済みか確認
 def check_feedback_status(user_id):
-    """
-    ユーザーがすでにフィードバック回答済みか確認
-    """
     try:
         if supabase is None:
             return False
