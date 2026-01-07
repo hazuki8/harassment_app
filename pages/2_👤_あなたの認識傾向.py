@@ -841,8 +841,8 @@ st.markdown("""
 <div style="text-align: center; margin-bottom: 20px;">
     <h4 style="margin-bottom: 10px;">📊 さらに詳しく分析する</h4>
     <p>
-        「世の中の認識」と比較して、あなたのギャップがどのカテゴリに集中しているか、<br>
-        属性別（年代・役職など）にどのような違いがあるかを確認できます。
+        属性別のデータや、各シナリオの回答分布など<br>
+        社会全体の回答傾向について、より詳細なデータを閲覧できます。
     </p>
 </div>
 """, unsafe_allow_html=True)

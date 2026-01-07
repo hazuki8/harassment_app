@@ -96,7 +96,7 @@ consented = st.checkbox(
 st.write("")
 # 大きなボタンで誘導 (type="primary")
 if st.button(
-    "📝 診断をスタートする",
+    "📝 実験を開始する",
     type="primary",
     use_container_width=True,
     disabled=not st.session_state.get("consent_given", False)
