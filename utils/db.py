@@ -163,17 +163,34 @@ def get_global_analysis_data_view():
     SQLビューから分析用データを一括取得
     Page 3 で使用
     
+    Supabase REST APIのデフォルト上限は1000行のため、
+    ページネーションで複数回に分けて取得
+
+    
     Returns:
         list: users, responses, scenarios が結合されたレコード一覧
     """
     try:
-        response = supabase.table("view_analysis_data").select("*").execute()
+        all_data = []
+        page_size = 1000
+        offset = 0
         
-        if not response.data:
-            return []
+        # ページネーションで全データを取得（最大50000行まで対応）
+        while True:
+            response = supabase.table("view_analysis_data").select("*").range(offset, offset + page_size - 1).execute()
+            
+            if not response.data:
+                break
+            
+            all_data.extend(response.data)
+            
+            # 1000行未満なら最後のページ
+            if len(response.data) < page_size:
+                break
+            
+            offset += page_size
         
-        # データはそのまま返す
-        return response.data
+        return all_data
     except Exception as e:
         st.error(f"分析データ取得エラー: {e}")
         return []
@@ -234,6 +251,10 @@ def generate_demo_data():
                 "type": s_type,
                 "title": scenario.get("title"),
                 "text": scenario.get("text"),
+                # 追加: 解説・アドバイス・法的参照も含める
+                "explanation": scenario.get("explanation", ""),
+                "advice": scenario.get("advice", ""),
+                "legal_ref": scenario.get("legal_ref", ""),
             }
             demo_records.append(record)
 
