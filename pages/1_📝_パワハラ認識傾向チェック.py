@@ -145,7 +145,11 @@ if not st.session_state.diagnosis_started:
             service_years = wc2.selectbox("⏳ 勤続年数", OPT_YEARS, index=None, placeholder="選択してください")
             job = wc2.selectbox("💻 職種", OPT_JOB, index=None, placeholder="選択してください")
         else:
-            save_val = "学生" if "学生" in user_status else "その他"
+            # 非就業者は就業者の選択肢と衝突しない値を設定
+            if "学生" in user_status:
+                save_val = "学生"
+            else:
+                save_val = "求職・退職者・(夫)主婦等"
             employment = industry = position = service_years = job = save_val
 
         st.markdown("---")
